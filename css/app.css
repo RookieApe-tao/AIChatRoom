@@ -1,0 +1,160 @@
+/* AI 多角色对话实验室 —— 自定义样式（基于 layui 之上） */
+:root{
+  --c-h:#16baaa; --c-h-bg:#e6f7f4;      /* 人类 青 */
+  --line:#e7ebf0; --muted:#8a94a3;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;display:flex;flex-direction:column;background:#f4f6fa;
+  font-family:"Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",Arial,sans-serif;color:#2f3640}
+
+/* ===== 顶栏 ===== */
+header{background:#fff;border-bottom:1px solid var(--line);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{font-size:17px;margin:0;display:flex;align-items:center;gap:8px}
+header h1 .logo{font-size:20px}
+.file-chips{font-size:12px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}
+.file-chips code{background:#f2f4f8;border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:#5b6472}
+.spacer{flex:1}
+.status{display:flex;align-items:center;gap:6px;font-size:13px;color:#5b6472;background:#f6f8fb;border:1px solid var(--line);border-radius:20px;padding:4px 12px}
+.status .sdot{width:8px;height:8px;border-radius:50%;background:#faa81a}
+.status.on .sdot{background:#16baaa}
+
+/* ===== 配置区 ===== */
+#cfgWrap{padding:12px 16px 0}
+#cfgPanel{display:none;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+#cfgPanel.open{display:grid}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 3px rgba(31,45,61,.05);padding:12px 14px}
+.card h3{margin:0 0 10px;font-size:14px;display:flex;align-items:center;gap:8px}
+.card h3 .dot{width:10px;height:10px;border-radius:50%;flex:none}
+.ai-name{font-weight:600}
+.add-card{display:flex;align-items:center;border-style:dashed;background:#fbfcfe;justify-content:center;padding:18px}
+.row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.row>label{flex:0 0 72px;font-size:12px;color:var(--muted);text-align:right}
+.row .layui-input,.row .layui-textarea{flex:1;height:32px;padding:0 10px;font-size:13px;border-color:#e3e8ee;border-radius:6px}
+textarea.layui-textarea{height:auto;min-height:64px;padding:6px 10px;line-height:1.6;resize:vertical;border-radius:6px}
+select.layui-input{cursor:pointer}
+.hint{font-size:11px;color:#b0b8c3;margin:2px 0 8px 80px;line-height:1.5}
+.row-inline{display:flex;gap:10px}
+.row-inline .cell{flex:1;display:flex;align-items:center;gap:6px}
+.row-inline label{font-size:12px;color:var(--muted);white-space:nowrap}
+.swtrow{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+
+/* 自绘开关 */
+.swt{position:relative;display:inline-block;width:36px;height:20px;flex:none}
+.swt input{opacity:0;width:0;height:0;position:absolute}
+.swt i{position:absolute;inset:0;background:#cfd6de;border-radius:20px;transition:.2s;cursor:pointer}
+.swt i::before{content:"";position:absolute;width:16px;height:16px;left:2px;top:2px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.swt input:checked+i{background:var(--c-h)}
+.swt input:checked+i::before{transform:translateX(16px)}
+.swt-label{font-size:12px;color:var(--muted)}
+
+/* ===== 主体三栏 ===== */
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(220px,280px) 1fr minmax(260px,320px);gap:12px;padding:12px 16px 14px}
+#aiListCard,#memCard{display:flex;flex-direction:column}
+#aiList{flex:1;overflow-y:auto;min-height:0}
+.ai-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;cursor:pointer;border:1px solid transparent;margin-bottom:6px}
+.ai-item:hover{background:#f2f6ff}
+.ai-item.sel{background:color-mix(in srgb,var(--c) 10%,#fff);border-color:var(--c)}
+.ai-item .cdot{width:10px;height:10px;border-radius:50%;flex:none}
+.ai-item .nm{font-weight:600;font-size:13px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ai-item .ord{font-size:10px;color:var(--muted);background:#f2f4f8;border-radius:8px;padding:1px 6px;white-space:nowrap}
+.ai-item .aid{font-size:10px;color:#98a1ad}
+.panel{display:flex;flex-direction:column;min-height:0;flex:none}
+.panel-head{display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:8px;flex-wrap:wrap}
+.panel-head .name{font-weight:600;font-size:14px}
+.panel-head .sub{font-size:11px;color:var(--muted);flex:1}
+.mem-text{flex:1;width:100%;min-height:90px;resize:none;border:1px solid #e3e8ee;border-radius:8px;padding:10px;font-size:13px;line-height:1.7;background:#fcfdff;font-family:inherit;color:#3a4250}
+.mem-text:focus{outline:none;border-color:#b9d0ff}
+.panel-foot{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+
+/* 聊天区 */
+.chat-panel{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 3px rgba(31,45,61,.05);display:flex;flex-direction:column;min-height:0}
+.chat-scroll{flex:1;overflow-y:auto;padding:14px 16px;background:#fbfcfe}
+.msg{display:flex;margin:10px 0}
+.msg.ai{justify-content:flex-start}
+.msg.rev{justify-content:flex-end}
+.msg.h{justify-content:center}
+.bubble{max-width:80%;padding:8px 12px;border-radius:14px;background:#eef1f6;line-height:1.65;font-size:14px;white-space:pre-wrap;word-break:break-word}
+.msg.ai .bubble{background:color-mix(in srgb, var(--c) 13%, #fff);border-top-left-radius:4px}
+.msg.rev .bubble{background:color-mix(in srgb, var(--c) 13%, #fff);border-top-right-radius:4px}
+.msg.h .bubble{background:var(--c-h-bg);font-size:13px;border-radius:16px}
+.bubble .who{font-size:11px;color:var(--muted);margin-bottom:3px}
+.msg.ai .who{color:var(--c)}
+.msg.rev .who{color:var(--c);text-align:right}
+.msg.h .who{color:var(--c-h);text-align:center}
+.msg.h .txt{color:#2c6e63}
+.think-box{margin:2px 0 5px;font-size:12px}
+.think-box summary{cursor:pointer;color:#8a94a3;user-select:none;outline:none}
+.think-box summary:hover{color:#5b6472}
+.think-box .think-txt{margin-top:4px;padding:7px 9px;background:rgba(255,255,255,.6);border:1px dashed #d8dee6;border-radius:8px;color:#6b7686;font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto}
+.think .txt .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#b8c2cf;margin-right:4px;animation:blink 1.2s infinite}
+.think .txt .dot:nth-child(2){animation-delay:.2s}
+.think .txt .dot:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.empty-tip{color:#b0b8c3;font-size:13px;text-align:center;margin-top:40px;line-height:2}
+
+/* 输入条 */
+.input-bar{border-top:1px solid var(--line);padding:10px 12px;display:flex;gap:8px;align-items:center;background:#fff;border-radius:0 0 12px 12px}
+.input-bar .layui-input{flex:1;height:36px;border-radius:18px;padding:0 14px;font-size:13px}
+.human-tag{font-size:11px;color:var(--c-h);background:var(--c-h-bg);border-radius:10px;padding:2px 8px;white-space:nowrap}
+
+/* 提示条（自绘 toast） */
+#toastBox{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center}
+.toast{background:#333c4a;color:#fff;font-size:13px;padding:8px 18px;border-radius:20px;box-shadow:0 4px 14px rgba(0,0,0,.2);animation:tin .25s;max-width:70vw}
+.toast.err{background:#e05656}
+.toast.ok{background:#16a589}
+.toast.out{opacity:0;transition:.3s}
+@keyframes tin{from{opacity:0;transform:translateY(-8px)}to{opacity:1}}
+
+/* 横幅 / 弹窗 / 折叠说明 */
+#fsBanner{display:none;margin:10px 16px 0;background:#fff7e8;border:1px solid #ffd591;color:#8c6b2f;border-radius:10px;padding:10px 14px;font-size:13px;line-height:1.8}
+details.usage{margin-top:10px;grid-column:1/-1;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:13px;color:#5b6472;line-height:1.9}
+details.usage summary{cursor:pointer;font-weight:600;color:#2f3640}
+details.usage code{background:#f2f4f8;border-radius:4px;padding:1px 6px;font-size:12px}
+#modal{display:none;position:fixed;inset:0;background:rgba(20,28,40,.45);z-index:9990;align-items:center;justify-content:center}
+#modal.show{display:flex}
+#modal .box{background:#fff;border-radius:12px;width:min(860px,92vw);max-height:84vh;display:flex;flex-direction:column;overflow:hidden}
+#modal .box header{padding:12px 16px;border-bottom:1px solid var(--line)}
+#modal pre{margin:0;padding:14px 16px;overflow:auto;flex:1;font-size:12.5px;line-height:1.7;background:#fbfcfe;white-space:pre-wrap;word-break:break-word}
+#modal .foot{padding:10px 16px;border-top:1px solid var(--line);text-align:right}
+
+.layui-btn{border-radius:8px}
+.layui-btn-sm{font-size:12.5px}
+.btn-run{background:linear-gradient(135deg,#2b7fff,#1668dc);border:none}
+.btn-run:disabled{opacity:.55;cursor:not-allowed}
+
+/* ===== 发言顺序：多选下拉 ===== */
+.msel{position:relative}
+.msel-box{display:flex;align-items:center;gap:6px;min-height:34px;border:1px solid #e3e8ee;border-radius:6px;padding:3px 8px;cursor:pointer;background:#fff;flex-wrap:wrap}
+.msel-box:hover{border-color:#c6d2e0}
+.msel-caret{color:#98a1ad;font-size:11px}
+.msel-chips{display:flex;gap:4px;flex-wrap:wrap;flex:1;align-items:center}
+.msel-empty{color:#b0b8c3;font-size:12px}
+.chip{display:inline-flex;align-items:center;gap:3px;background:color-mix(in srgb,var(--c) 12%,#fff);border:1px solid var(--c);color:var(--c);border-radius:10px;padding:1px 6px;font-size:12px;line-height:1.5}
+.chip b{font-weight:600}
+.chip .mv,.chip .x{cursor:pointer;opacity:.75;font-size:10px;padding:0 1px}
+.chip .mv:hover,.chip .x:hover{opacity:1}
+.msel-pop{display:none;position:absolute;z-index:60;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.12);padding:6px;max-height:230px;overflow:auto}
+.msel.open .msel-pop{display:block}
+.msel-tools{display:flex;gap:10px;padding:2px 6px 6px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.msel-tools a{cursor:pointer;color:#2b7fff;font-size:12px}
+.msel-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px}
+.msel-item:hover{background:#f2f6ff}
+.msel-item input{accent-color:#16baaa}
+.msel-item .aid{margin-left:auto;color:#98a1ad;font-size:11px}
+.msel-item .cdot{width:8px;height:8px;border-radius:50%;flex:none}
+
+/* ===== API 连接 ===== */
+.api-row{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.api-row .layui-input{height:30px;font-size:12.5px}
+.api-row input[data-k="name"]{flex:0 0 80px}
+.api-row input[data-k="base"]{flex:1;min-width:0}
+.api-row input[data-k="key"]{flex:0 0 130px}
+.api-row input[data-k="model"]{flex:0 0 110px}
+.connrow{transition:opacity .15s}
+
+@media (max-width:1150px){
+  main{grid-template-columns:1fr;grid-template-rows:auto minmax(320px,1fr) auto}
+  #aiListCard,#memCard{min-height:200px}
+  .chat-panel{order:-1}
+}

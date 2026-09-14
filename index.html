@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 多角色对话实验室</title>
+<!-- 样式框架：layui（本地 layui/ 目录，离线可用；字体在 layui/font/） -->
+<link rel="stylesheet" href="./layui/css/layui.css">
+<link rel="stylesheet" href="./css/app.css">
+</head>
+<body>
+
+<!-- ===== 顶栏 ===== -->
+<header>
+  <h1><span class="logo">🤖</span>AI 多角色对话实验室</h1>
+  <div class="file-chips" id="fileChips"></div>
+  <div class="spacer"></div>
+  <div class="status" id="statusBox"><span class="sdot"></span><span id="statusText">未连接目录（内容暂存于浏览器）</span></div>
+  <button class="layui layui-btn layui-btn-sm layui-btn-normal" id="btnConnectDir">📁 连接目录</button>
+  <button class="layui layui-btn layui-btn-sm" id="btnImport">导入文件</button>
+  <button class="layui layui-btn layui-btn-sm layui-btn-primary" id="btnExportAll">导出全部</button>
+  <button class="layui layui-btn layui-btn-sm" id="btnReloadCfg" title="手动编辑 config.txt 保存后，点此重新加载生效">⟳ 重载配置</button>
+  <button class="layui layui-btn layui-btn-sm" id="btnSaveCfgFile" title="立即把当前配置写入 config.txt">💾 写入配置</button>
+  <button class="layui layui-btn layui-btn-sm layui-btn-primary" id="btnToggleCfg">⚙ 配置</button>
+  <input type="file" id="fileImport" multiple accept=".txt" style="display:none">
+</header>
+
+<div id="fsBanner">⚠ 当前环境不支持直接读写本地文件（需要 Chrome / Edge 的「文件系统访问」能力）。<br>
+  ① 请用 Chrome 或 Edge 打开本页面并点击「连接目录」；② 若仍不行，可在本目录运行 <code>node server.js</code> / <code>npx serve .</code> / <code>python -m http.server 8000</code> 后从 localhost 访问。<br>
+  目前已自动降级：对话与记忆暂存于浏览器，可用「导出全部 / 导入文件」手动同步 txt 文件。</div>
+
+<!-- ===== 配置区 ===== -->
+<div id="cfgWrap">
+  <div id="cfgPanel" class="open">
+    <div id="aiCards"></div>
+
+    <!-- API 连接 -->
+    <div class="card" id="apiCard">
+      <h3>🔌 API 连接
+        <span style="flex:1"></span>
+        <button class="layui layui-btn layui-btn-xs layui-btn-normal" data-act="addApiConn">➕ 添加连接</button>
+      </h3>
+      <div id="apiList"></div>
+      <div class="hint" style="margin-left:0">在这里定义若干「连接」（名称 + 地址 + Key + 默认模型）；各 AI 卡片顶部的「API 连接」下拉选择后即复用地址与 Key，并带入默认模型。</div>
+    </div>
+
+    <!-- 全局设置 -->
+    <div class="card">
+      <h3><span class="dot" style="width:10px;height:10px;border-radius:50%;background:var(--c-h)"></span>对话设置</h3>
+      <div class="row" style="align-items:flex-start"><label>场景设定</label><textarea class="layui-textarea" id="f_topic" rows="3" placeholder="描述对话的场景 / 背景 / 各角色的关系与目标…留空则自由开聊"></textarea></div>
+      <div class="row" style="align-items:flex-start"><label>对话规则</label><textarea class="layui-textarea" id="f_rules" rows="4" placeholder="留空 = 使用内置默认规则（多轮对话说明 / 不带前缀 / 发言简短 / 不复述记忆）"></textarea></div>
+      <div class="row" style="align-items:flex-start"><label>发言顺序</label>
+        <div class="msel" style="flex:1;min-width:0" id="orderMsel">
+          <div class="msel-box" id="orderBox">
+            <div class="msel-chips" id="orderChips"></div>
+            <span class="msel-caret">▾</span>
+          </div>
+          <div class="msel-pop" id="orderPop"></div>
+          <div class="hint" style="margin-left:0">勾选 = 参与本轮，按勾选顺序发言（气泡上 ▲▼ 可调序）；留空 = 全部按配置顺序参与。</div>
+        </div>
+      </div>
+      <div class="row-inline">
+        <div class="cell"><label>开场先发言</label><select class="layui-input" id="f_first" style="width:110px"></select></div>
+        <div class="cell"><label>人类插话后先回应</label><select class="layui-input" id="f_after" style="width:110px"></select></div>
+      </div>
+      <div class="row-inline">
+        <div class="cell"><label>轮数</label><input class="layui-input" id="f_rounds" type="number" min="-1" value="6" title="每次点开始的对话轮数（1 轮 = 参与的每个 AI 各发言一次）；填 -1 = 无限轮数，直到点「⏸ 暂停」"></div>
+        <div class="cell"><label>间隔(秒)</label><input class="layui-input" id="f_gap" type="number" min="0" step="0.5" value="1"></div>
+        <div class="cell"><label>历史条数</label><input class="layui-input" id="f_hist" type="number" min="0" value="0" title="每次请求携带的最近发言条数；0 = 全部历史。场景设定常驻 System，不怕截断后丢失场景"></div>
+      </div>
+      <div class="swtrow">
+        <label class="swt" title="开启后 AI 回复边生成边显示（SSE 流式；仅作用于对话发言）"><input type="checkbox" id="f_stream"><i></i></label><span class="swt-label">流式输出</span>
+        <span class="hint" style="margin:0 0 0 8px">AI 的回复逐字实时显示；接口不支持 SSE 时自动回退为整段返回</span>
+      </div>
+      <details class="usage">
+        <summary>📖 使用说明</summary>
+        <b>快速开始：</b>① 用 Chrome/Edge 打开本页，点右上「连接目录」，选择本 html 所在文件夹（授权后即可直接读写各 txt）；② 展开配置，为每个 AI 填写 API 地址 / Key / 模型 / 人设（可「➕ 添加 AI」扩展数量）；③ 填写「场景设定」，点中间「▶ 开始聊天」。<br>
+        <b>数据文件</b>（与 index.html 同目录）：<code>memory_aiN.txt</code> = 每个 AI 一个记忆文件；<code>chat_log.txt</code> = 聊天记录（所有 AI 共用，程序按 <code>### [ID] 时间</code> 分段解析后作为上下文发给模型）；<code>config.txt</code> = 全部配置（<code>[AI1] [AI2]…</code> 分节 + <code>[全局]</code>），页面改动自动写回，手动编辑后点「⟳ 重载配置」生效。<br>
+        <b>发言顺序与参与：</b>「发言顺序」多选下拉：勾选的 AI 参与本轮，按勾选顺序发言（气泡 ▲▼ 可调序），留空＝全部按配置顺序参与；「开场先发言」＝新对话第一句谁说；「人类插话后先回应」＝插话后从谁开始；未填 Key 的 AI 自动跳过。<b>轮数按「轮」计，1 轮 = 参与的每个 AI 各发言一次</b>；<b>轮数填 -1 = 无限轮数</b>，对话一直进行，点「⏸ 暂停」结束。<br>
+        <b>记忆机制：</b>开启「自动记忆」时，每个 AI 每次发言后会在后台把「当前记忆 + 完整聊天记录」交给自己的模型整理出新记忆并写回自己的记忆 txt；也可手动编辑后点「保存修改」，或点「AI整理」立即更新。<br>
+        <b>思考过程：</b>开「思考」开关后，气泡内可展开查看该 AI 的推理内容（仅展示，不写入 txt）。<br>
+        <b>人类插话：</b>「发送」= 写入聊天记录，参与 AI 依次各回复一条（1 轮）后停下等你；「▶ 继续」= 让 AI 们自行接着聊（不再等人类）；AI 对话进行中随时发消息可即时插入。<br>
+        <b>打不开本地文件？</b>该能力仅 Chrome/Edge 支持（file:// 直接双击一般可用）；若受限，在本目录运行 <code>node server.js</code> 后从 localhost 访问即可。其他浏览器会自动降级为浏览器内暂存 + 手动导入导出。
+      </details>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 主体三栏 ===== -->
+<main>
+  <!-- 左：AI 列表 -->
+  <section class="panel card" id="aiListCard">
+    <div class="panel-head"><b style="font-size:14px">🧑‍🤝‍🧑 AI 列表</b><span class="sub" style="text-align:right">点击选中查看记忆</span></div>
+    <div id="aiList"></div>
+    <button class="layui layui-btn layui-btn-sm layui-btn-primary" id="btnAddAiList" style="margin-top:8px;width:100%">➕ 添加 AI</button>
+  </section>
+
+  <!-- 中：聊天记录 -->
+  <section class="chat-panel panel">
+    <div class="panel-head" style="padding:10px 14px;margin:0">
+      <b style="font-size:14px">💬 聊天记录</b>
+      <span class="layui layui-badge layui-bg-blue" style="margin-left:4px"><span id="turnCount">0</span> 条</span>
+      <span class="sub" id="nextHint"></span>
+      <button class="layui layui-btn layui-btn-sm btn-run" id="btnStart">▶ 开始聊天</button>
+      <button class="layui layui-btn layui-btn-sm layui-btn-warm" id="btnPause" disabled>⏸ 暂停</button>
+      <button class="layui layui-btn layui-btn-sm layui-btn-primary" id="btnRaw">原文</button>
+      <button class="layui layui-btn layui-btn-sm layui-btn-danger layui-btn-primary" id="btnClear">清空</button>
+    </div>
+    <div class="chat-scroll" id="chatScroll">
+      <div class="empty-tip" id="emptyTip">还没有聊天记录<br>在配置里填好各 AI 的 API Key，输入场景设定后点「▶ 开始聊天」</div>
+      <div id="chatList"></div>
+    </div>
+    <div class="input-bar">
+      <span class="human-tag">👤 人类插话</span>
+      <input class="layui-input" id="humanInput" placeholder="说点什么…（Enter 发送，每个 AI 各回一条后停下等你）">
+      <button class="layui layui-btn layui-btn-sm layui-btn-normal" id="btnHumanSend" title="每个 AI 依次回复一条后停下等你">发送</button>
+      <button class="layui layui-btn layui-btn-sm btn-run" id="btnHumanContinue" title="让 AI 们自行继续聊天（按设置轮数；轮数 -1 = 无限，直到暂停）">▶ 继续</button>
+    </div>
+  </section>
+
+  <!-- 右：选中 AI 的记忆 -->
+  <section class="panel card" id="memCard">
+    <div class="panel-head">
+      <span class="dot" id="memDot" style="background:#98a1ad"></span>
+      <span class="name" id="memName">记忆</span>
+      <span class="sub" id="memTime">未更新</span>
+    </div>
+    <textarea class="mem-text" id="memTa" spellcheck="false" placeholder="在左侧点选某个 AI，这里显示 / 编辑它的长期记忆"></textarea>
+    <div class="panel-foot">
+      <button class="layui layui-btn layui-btn-sm" data-act="saveMem">保存修改</button>
+      <button class="layui layui-btn layui-btn-sm layui-btn-normal" data-act="updMem">AI整理</button>
+      <button class="layui layui-btn layui-btn-sm layui-btn-primary" data-act="expMem">导出</button>
+    </div>
+  </section>
+</main>
+
+<!-- 原文弹窗 -->
+<div id="modal">
+  <div class="box">
+    <header><b id="modalTitle">原文</b></header>
+    <pre id="modalPre"></pre>
+    <div class="foot"><button class="layui layui-btn layui-btn-sm" id="modalClose">关闭</button></div>
+  </div>
+</div>
+
+<!-- 多模块脚本：普通 script 方式（保证 file:// 双击可用），按依赖顺序加载 -->
+<script src="./js/01-state.js"></script>
+<script src="./js/02-config.js"></script>
+<script src="./js/03-chatlog.js"></script>
+<script src="./js/04-api.js"></script>
+<script src="./js/05-render.js"></script>
+<script src="./js/06-actions.js"></script>
+<script src="./js/07-main.js"></script>
+</body>
+</html>

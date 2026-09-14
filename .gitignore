@@ -1,0 +1,11 @@
+# 运行时数据（含聊天记录与记忆，勿提交）
+chat_log.txt
+memory_ai*.txt
+
+# 系统文件
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# 依赖
+node_modules/
