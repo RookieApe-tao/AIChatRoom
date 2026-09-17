@@ -87,6 +87,8 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(220px,280px) 
 .think-box summary{cursor:pointer;color:#8a94a3;user-select:none;outline:none}
 .think-box summary:hover{color:#5b6472}
 .think-box .think-txt{margin-top:4px;padding:7px 9px;background:rgba(255,255,255,.6);border:1px dashed #d8dee6;border-radius:8px;color:#6b7686;font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto}
+/* 流式输出时，思考阶段在气泡内实时滚动的推理文本 */
+.think .txt .think-live{max-height:180px;overflow:auto;white-space:pre-wrap;word-break:break-word;background:rgba(255,255,255,.6);border:1px dashed #d8dee6;border-radius:8px;padding:7px 9px;color:#6b7686;font-size:12px;line-height:1.6;text-align:left}
 .think .txt .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#b8c2cf;margin-right:4px;animation:blink 1.2s infinite}
 .think .txt .dot:nth-child(2){animation-delay:.2s}
 .think .txt .dot:nth-child(3){animation-delay:.4s}

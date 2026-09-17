@@ -1,24 +1,44 @@
 # ===================================================
-# AI 多角色对话实验室 配置文件（config.txt）
-# 可直接手动编辑：value 里的换行写成 \n ；# 开头为注释行
-# AI 数量可扩展：复制一个 [AI#] 分节并把编号 +1 即可（如 [AI3]）
-# order = 参与发言的 AI 与先后顺序（逗号分隔，留空=全部）；first = 开场先发言；after = 人类插话后先回应
-# 手动改完保存后，到页面顶部点「⟳ 重载配置」生效
-# ===================================================
+# AI 多角色对话实验室 配置文件（config.txt�?# 可直接手动编辑：value 里的换行写成 \n �? 开头为注释�?# AI 数量可扩展：复制一�?[AI#] 分节并把编号 +1 即可（如 [AI3]�?# order = 参与发言�?AI 与先后顺序（逗号分隔，留�?全部）；first = 开场先发言；after = 人类插话后先回应
+# 手动改完保存后，到页面顶部点「⟳ 重载配置」生�?# ===================================================
 
-# ---- 智谱 ----
+# ---- 老K ----
 [AI2]
-name = 智谱
+name = 老K
 base = https://api.deepseek.com
 key = sk-your-api-key-here
+model = glm-5.3-flash
+temp = 2
+autoMem = 1
+showThink = 1
+api = 智谱GLM
+persona = 
+
+# ---- 02 ----
+[AI3]
+name = 02
+base = https://api.deepseek.com
+key = 
+model = mimo-v2.5-pro
+temp = 1.5
+autoMem = 1
+showThink = 1
+api = 小米MiMo
+persona = 
+
+# ---- 03 ----
+[AI4]
+name = 03
+base = https://api.deepseek.com
+key = 
 model = deepseek-flash
-temp = 0.8
+temp = 2
 autoMem = 1
 showThink = 1
 api = deepseek
 persona = 
 
-# ---- API 连接（供各 AI 下拉选择复用；格式：名称 = 地址|Key|默认模型） ----
+# ---- API 连接（供�?AI 下拉选择复用；格式：名称 = 地址|Key|默认模型�?----
 [API]
 智谱GLM = https://open.bigmodel.cn/api/coding/paas/v4|your-zhipu-api-key-here|glm-5.3-flash
 小米MiMo = https://api.xiaomimimo.com/v1|sk-your-api-key-here|mimo-v2.5-pro
@@ -27,10 +47,10 @@ deepseek = https://api.deepseek.com|sk-your-api-key-here|deepseek-flash
 # ---- 全局 ----
 [全局]
 topic = 
-rules = - 直接输出你要说的话本身：不要输出自己的名字、时间、编号或任何前缀。\n- 每次发言保持简短自然（通常 1~4 句话）：回应他人观点、补充或提出新想法。\n- 长期记忆仅供你参考，不要在对话中复述记忆本身。
-hist = 0
-rounds = 2
-gap = 5
-order = AI2
+rules = - 直接输出你要说的话本身：不要输出自己的名字、时间、编号或任何前缀。\n- 长期记忆仅供你参考，不要在对话中复述记忆本身。\n- 内容长度尽量保持�?句话以内，或�?00字以�?hist = 9
+stream = 1
+rounds = -1
+gap = 1
+order = AI2,AI3,AI4
 first = AI2
 after = AI2

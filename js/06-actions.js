@@ -3,18 +3,32 @@
 
 async function speak(id){
   const el = setThinking(id, true);
+  const showThink = getAi(id).think !== false;
+  let thinkBox = null;
   try{
-    const {content, reasoning} = await callLLM(effCfg(getAi(id)), buildMessages(id), undefined, (text) => {
-      if(!el || !text) return;                              // 只有思考增量的阶段保持「正在思考」动画
+    const {content, reasoning} = await callLLM(effCfg(getAi(id)), buildMessages(id), undefined, (text, rs) => {
+      if(!el) return;
       const txt = el.querySelector('.txt'); if(!txt) return;
-      if(el.classList.contains('think')){                   // 首个内容片段：把思考气泡变成直播气泡
-        el.classList.remove('think');
-        const who = el.querySelector('.who'); if(who) who.textContent = spName(id) + ' 正在回复…';
-        txt.innerHTML = '';
+      if(text){                                             // 内容阶段：直播正文
+        if(el.classList.contains('think')){                 // 首个内容片段：把思考气泡变成直播气泡
+          el.classList.remove('think');
+          const who = el.querySelector('.who'); if(who) who.textContent = spName(id) + ' 正在回复…';
+          txt.innerHTML = '';
+        }
+        txt.textContent = text; scrollBottom();             // text 为累计内容，直接整段刷新
+      }else if(rs && showThink && el.classList.contains('think')){
+        if(!thinkBox){                                      // 思考阶段：实时滚动显示推理内容
+          txt.innerHTML = '';
+          thinkBox = document.createElement('div');
+          thinkBox.className = 'think-live';
+          txt.appendChild(thinkBox);
+        }
+        thinkBox.textContent = rs;
+        thinkBox.scrollTop = thinkBox.scrollHeight;
+        scrollBottom();
       }
-      txt.textContent = text; scrollBottom();               // text 为累计内容，直接整段刷新
     });
-    appendBlock(id, sanitize(id, content), (getAi(id).think !== false) ? reasoning : null);
+    appendBlock(id, sanitize(id, content), showThink ? reasoning : null);
     if(getAi(id).mem) queueMem(id);
   }finally{ if(el) el.remove(); }
 }
